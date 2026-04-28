@@ -50,6 +50,10 @@ async def run_all():
 
     log.info("🚀 Launching %d agent(s) with 10s stagger delay", AGENT_COUNT)
 
+    # Background task to sync variables to Railway ONCE after all agents are setup
+    if os.getenv("RAILWAY_API_TOKEN") and os.getenv("SETUP_COMPLETE", "").lower() != "true":
+        asyncio.create_task(_wait_and_sync(runners))
+
     # Wait forever — tasks run indefinitely
     try:
         await asyncio.gather(*tasks)
@@ -58,6 +62,24 @@ async def run_all():
         for t in tasks:
             t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+
+
+async def _wait_and_sync(runners):
+    """Wait for all agents to get an API key, then sync to Railway."""
+    log.info("Waiting for all agents to finish setup before syncing to Railway...")
+    while True:
+        all_ready = True
+        for r in runners:
+            if not r._api_key:
+                all_ready = False
+                break
+        if all_ready:
+            break
+        await asyncio.sleep(5)
+    
+    log.info("All agents setup! Syncing fleet variables to Railway...")
+    from bot.utils.railway_sync import sync_fleet_to_railway
+    await sync_fleet_to_railway(runners)
 
 
 async def _delayed_start(runner: AgentRunner, delay: int):

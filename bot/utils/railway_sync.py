@@ -158,3 +158,38 @@ async def sync_all_to_railway(creds: dict, agent_pk: str, owner_pk: str = ""):
         log.info("✅ All variables synced to Railway (1 API call = 1 redeploy). Credentials saved!")
     else:
         log.warning("Railway collection upsert failed — check RAILWAY_API_TOKEN permissions")
+
+
+async def sync_fleet_to_railway(runners: list):
+    """
+    Fleet version: waits until all agents are setup, then syncs ALL variables
+    (global config + global owner + per-agent keys) to Railway in ONE API call.
+    """
+    if not is_railway() or is_setup_complete():
+        return
+
+    config = _get_railway_config()
+    if not config:
+        return
+
+    log.info("Fleet Railway sync — saving ALL variables in one API call...")
+
+    # Start with global config and owner
+    all_vars = {
+        "SETUP_COMPLETE": "true",
+        "OWNER_KEY": os.getenv("OWNER_KEY", ""),
+        "OWNER_EOA": os.getenv("OWNER_EOA", ""),
+    }
+
+    # Add per-agent variables
+    for r in runners:
+        prefix = r.prefix  # e.g. "AGENT_1"
+        all_vars[f"{prefix}_NAME"] = r._agent_name
+        all_vars[f"{prefix}_API_KEY"] = r._api_key
+        all_vars[f"{prefix}_PRIVATE_KEY"] = os.getenv(f"{prefix}_PRIVATE_KEY", "")
+
+    ok = await _collection_upsert(all_vars)
+    if ok:
+        log.info("✅ Fleet variables synced to Railway. Keys are now permanent!")
+    else:
+        log.warning("Fleet Railway upsert failed.")
