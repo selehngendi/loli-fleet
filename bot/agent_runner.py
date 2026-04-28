@@ -22,7 +22,7 @@ from bot.game.paid_join import join_paid_game
 from bot.game.room_selector import select_room
 from bot.game.settlement import settle_game
 from bot.memory.agent_memory import AgentMemory
-from bot.state_router import determine_state, NO_ACCOUNT, IN_GAME, READY_PAID, READY_FREE
+from bot.state_router import determine_state, NO_ACCOUNT, NO_IDENTITY, IN_GAME, READY_PAID, READY_FREE
 from bot.strategy.brain import reset_game_state
 from bot.config import ROOM_MODE, ENABLE_MEMORY, AUTO_IDENTITY
 from bot.utils.logger import get_logger
