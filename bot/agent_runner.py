@@ -91,7 +91,7 @@ class AgentRunner:
         agent_addr= self._env("WALLET_ADDRESS")
         owner_pk  = self._env("OWNER_KEY")
         owner_addr= self._env("OWNER_EOA")
-        name      = self._env("NAME", f"MoltyAgent{self.index}")
+        name      = self._env("NAME", f"lolali-{self.index:02d}")
 
         if api_key and agent_pk:
             self.log.info("♻️  Restoring from env vars (agent=%s)", name)
