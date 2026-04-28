@@ -45,16 +45,16 @@
         "description": "Auto-register identity",
         "default": "true"
       },
-      "AGENT_1_NAME": { "default": "lololpoi-01" },
-      "AGENT_2_NAME": { "default": "lololpoi-02" },
-      "AGENT_3_NAME": { "default": "lololpoi-03" },
-      "AGENT_4_NAME": { "default": "lololpoi-04" },
-      "AGENT_5_NAME": { "default": "lololpoi-05" },
-      "AGENT_6_NAME": { "default": "lololpoi-06" },
-      "AGENT_7_NAME": { "default": "lololpoi-07" },
-      "AGENT_8_NAME": { "default": "lololpoi-08" },
-      "AGENT_9_NAME": { "default": "lololpoi-09" },
-      "AGENT_10_NAME": { "default": "lololpoi-10" }
+      "AGENT_1_NAME": { "default": "lololpoie-01" },
+      "AGENT_2_NAME": { "default": "lololpoie-02" },
+      "AGENT_3_NAME": { "default": "lololpoie-03" },
+      "AGENT_4_NAME": { "default": "lololpoie-04" },
+      "AGENT_5_NAME": { "default": "lololpoie-05" },
+      "AGENT_6_NAME": { "default": "lololpoie-06" },
+      "AGENT_7_NAME": { "default": "lololpoie-07" },
+      "AGENT_8_NAME": { "default": "lololpoie-08" },
+      "AGENT_9_NAME": { "default": "lololpoie-09" },
+      "AGENT_10_NAME": { "default": "lololpoie-10" }
     }
   }
 }
