@@ -116,12 +116,42 @@ class AgentRunner:
 
         # First run — generate wallets
         self.log.info("🆕 First run — generating wallets for agent %d", self.index)
+
+        # Agent wallet: ALWAYS unique per agent
         agent_addr, agent_pk = generate_agent_wallet()
         self._save_wallet("agent", agent_addr, agent_pk)
         self._set_env("WALLET_ADDRESS", agent_addr)
         self._set_env("PRIVATE_KEY", agent_pk)
 
-        owner_addr, owner_pk = generate_owner_wallet()
+        # Owner wallet: SHARE across all agents if global OWNER_KEY exists
+        global_owner_key  = os.getenv("OWNER_KEY", "")
+        global_owner_addr = os.getenv("OWNER_EOA", "")
+        if global_owner_key and global_owner_addr:
+            # Reuse global owner for all agents (1 owner → 10 agents)
+            owner_pk = global_owner_key
+            owner_addr = global_owner_addr
+            self.log.info("  🔗 Using shared Owner wallet: %s", owner_addr[:16] + "...")
+        else:
+            # No global owner → generate one (only agent #1 creates, others reuse)
+            owner_file = pathlib.Path("shared-owner-wallet.json")
+            if owner_file.exists():
+                try:
+                    shared = json.loads(owner_file.read_text())
+                    owner_addr = shared["address"]
+                    owner_pk = shared["privateKey"]
+                    self.log.info("  🔗 Reusing shared Owner from agent #1: %s",
+                                 owner_addr[:16] + "...")
+                except Exception:
+                    owner_addr, owner_pk = generate_owner_wallet()
+            else:
+                owner_addr, owner_pk = generate_owner_wallet()
+                # Save for other agents to reuse
+                owner_file.write_text(json.dumps({
+                    "address": owner_addr, "privateKey": owner_pk
+                }, indent=2))
+                self.log.info("  🆕 Generated shared Owner wallet: %s",
+                              owner_addr[:16] + "...")
+
         self._save_wallet("owner", owner_addr, owner_pk)
         self._set_env("OWNER_EOA", owner_addr)
         self._set_env("OWNER_KEY", owner_pk)
