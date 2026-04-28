@@ -246,24 +246,53 @@ class AgentRunner:
                 await asyncio.sleep(wait)
 
     async def _game_cycle(self):
-        """One full game cycle: join → play → settle → repeat."""
+        """One full game cycle: setup → join → play → settle → repeat."""
         api = MoltyAPI(self._api_key)
         try:
-            # Check state
+            # Check state — determine_state returns (state_str, context_dict)
             me = await api.get_accounts_me()
-            state = determine_state(me)
+            state, ctx = determine_state(me)
+            balance = me.get("smoltzBalance", me.get("balance", "?"))
             self.log.info("[#%d] State: %s | Balance: %s sMoltz",
-                          self.index, state,
-                          me.get("smoltzBalance", me.get("balance", "?")))
+                          self.index, state, balance)
 
+            # ── NO_ACCOUNT: wait for setup ──
             if state == NO_ACCOUNT:
                 self.log.warning("[#%d] Account not ready, waiting 30s", self.index)
                 await asyncio.sleep(30)
                 return
 
+            # ── NO_IDENTITY: register ERC-8004 identity ──
+            if state == NO_IDENTITY:
+                self.log.info("[#%d] Registering ERC-8004 identity...", self.index)
+                from bot.setup.identity import ensure_identity
+                from bot.setup.whitelist import ensure_whitelist
+                from bot.setup.wallet_setup import ensure_molty_wallet
+
+                # Run setup steps in order
+                try:
+                    await ensure_molty_wallet(api)
+                except Exception as e:
+                    self.log.warning("[#%d] Wallet setup: %s", self.index, e)
+
+                try:
+                    await ensure_whitelist(api)
+                except Exception as e:
+                    self.log.warning("[#%d] Whitelist: %s", self.index, e)
+
+                ok = await ensure_identity(api)
+                if ok:
+                    self.log.info("[#%d] ✅ Identity registered!", self.index)
+                else:
+                    self.log.warning("[#%d] Identity not ready, retry in 30s", self.index)
+                    await asyncio.sleep(30)
+                return
+
+            # ── IN_GAME: reconnect to active game ──
             if state == IN_GAME:
-                self.log.info("[#%d] Already in game — connecting WS", self.index)
-                game_id = me.get("currentGameId", "")
+                game_id = ctx.get("game_id", "")
+                self.log.info("[#%d] Already in game %s — connecting WS",
+                              self.index, game_id[:12] if game_id else "?")
                 if game_id:
                     engine = WebSocketEngine(self._api_key, game_id,
                                              agent_name=self._agent_name,
@@ -273,7 +302,7 @@ class AgentRunner:
                     reset_game_state()
                 return
 
-            # Join room
+            # ── READY: join a room ──
             if state in (READY_FREE, READY_PAID):
                 room_mode = select_room(state, ROOM_MODE)
                 if room_mode == "paid":
