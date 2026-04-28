@@ -159,9 +159,9 @@ class AgentRunner:
         self.log.info("  Agent  wallet: %s", agent_addr[:16] + "...")
         self.log.info("  Owner  wallet: %s", owner_addr[:16] + "...")
 
-        # POST /accounts
+        # POST /accounts (with staggered retry for rate limiting)
         api = MoltyAPI()
-        max_retries = 5
+        max_retries = 10
         result = None
         for attempt in range(1, max_retries + 1):
             try:
@@ -178,8 +178,8 @@ class AgentRunner:
                         await api.close()
                         return True
                     break
-                if e.code in ("FORBIDDEN", "SERVER_ERROR") and attempt < max_retries:
-                    wait = 30 * attempt
+                if e.code in ("FORBIDDEN", "SERVER_ERROR", "RATE_LIMITED") and attempt < max_retries:
+                    wait = 15 * attempt + (self.index * 5)  # Stagger by agent index
                     self.log.warning("Account creation failed (%s), retry %d/%d in %ds",
                                      e.code, attempt, max_retries, wait)
                     await asyncio.sleep(wait)

@@ -37,12 +37,18 @@ async def run_all():
     # Dashboard server (shared for all agents)
     await start_dashboard(port=DASHBOARD_PORT)
 
-    # Spawn all agents as concurrent coroutines
+    # Spawn agents with STAGGERED startup to avoid rate limiting
+    # Each agent starts 10s after the previous one
     runners = [AgentRunner(i) for i in range(1, AGENT_COUNT + 1)]
-    tasks = [asyncio.create_task(r.run(), name=f"agent-{r.index}")
-             for r in runners]
+    tasks = []
+    for i, runner in enumerate(runners):
+        task = asyncio.create_task(
+            _delayed_start(runner, delay=i * 10),
+            name=f"agent-{runner.index}"
+        )
+        tasks.append(task)
 
-    log.info("🚀 Launched %d agent(s) concurrently", AGENT_COUNT)
+    log.info("🚀 Launching %d agent(s) with 10s stagger delay", AGENT_COUNT)
 
     # Wait forever — tasks run indefinitely
     try:
@@ -52,6 +58,14 @@ async def run_all():
         for t in tasks:
             t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+
+
+async def _delayed_start(runner: AgentRunner, delay: int):
+    """Start an agent after a delay to avoid rate limiting."""
+    if delay > 0:
+        runner.log.info("⏳ Waiting %ds before starting (stagger)...", delay)
+        await asyncio.sleep(delay)
+    await runner.run()
 
 
 def main():
