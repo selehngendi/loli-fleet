@@ -9,12 +9,12 @@
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10,
     "envVars": {
-      "AGENT_NAME": {
-        "description": "Nama bot agent (max 50 chars)",
-        "required": true
+      "AGENT_COUNT": {
+        "description": "Jumlah agent yang berjalan sekaligus (1-10)",
+        "default": "10"
       },
       "RAILWAY_API_TOKEN": {
-        "description": "Railway API Token untuk auto-sync credentials. Buat di: https://railway.com/account/tokens",
+        "description": "Railway API Token (Wajib untuk auto-sync!)",
         "required": true
       },
       "ROOM_MODE": {
@@ -26,29 +26,35 @@
         "default": "INFO"
       },
       "ADVANCED_MODE": {
-        "description": "Auto-generate Owner+Agent wallet",
+        "description": "Auto-generate Owner+Agent wallets",
         "default": "true"
       },
       "AUTO_WHITELIST": {
-        "description": "Auto-check + auto-approve whitelist",
+        "description": "Auto-check whitelist",
         "default": "true"
       },
       "AUTO_SC_WALLET": {
-        "description": "Auto-create MoltyRoyale SC Wallet",
+        "description": "Auto-create SC Wallet",
         "default": "true"
       },
       "ENABLE_MEMORY": {
-        "description": "Cross-game learning",
+        "description": "Enable cross-game learning",
         "default": "true"
-      },
-      "ENABLE_AGENT_TOKEN": {
-        "description": "Agent token registration",
-        "default": "false"
       },
       "AUTO_IDENTITY": {
-        "description": "Auto-register ERC-8004 identity",
+        "description": "Auto-register identity",
         "default": "true"
-      }
+      },
+      "AGENT_1_NAME": { "default": "lolali-01" },
+      "AGENT_2_NAME": { "default": "lolali-02" },
+      "AGENT_3_NAME": { "default": "lolali-03" },
+      "AGENT_4_NAME": { "default": "lolali-04" },
+      "AGENT_5_NAME": { "default": "lolali-05" },
+      "AGENT_6_NAME": { "default": "lolali-06" },
+      "AGENT_7_NAME": { "default": "lolali-07" },
+      "AGENT_8_NAME": { "default": "lolali-08" },
+      "AGENT_9_NAME": { "default": "lolali-09" },
+      "AGENT_10_NAME": { "default": "lolali-10" }
     }
   }
 }
